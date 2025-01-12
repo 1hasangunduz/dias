@@ -1,4 +1,4 @@
-package data;
+package utils;
 
 import lombok.Data;
 
@@ -7,15 +7,8 @@ public class Variables {
 
     private static final ThreadLocal<Variables> VARIABLES_TL = new ThreadLocal<>();
 
-    private String link;
-    private String jsonData;
-    private boolean isAdjust = false;
-    private boolean isNativeCardAdwords = false;
-    private String domainName;
-    private String userTrackingID;
-    private String queryUrlPath = "";
+    private double price;
 
-    private boolean cookieAdded = false;
 
     private Variables() {}
 

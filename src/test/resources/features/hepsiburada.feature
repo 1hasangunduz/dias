@@ -1,4 +1,4 @@
-Feature: Hepsiburada Alışveriş Testi
+Feature: Hepsiburada Sepet Testi
 
   Scenario: En yüksek fiyatlı Apple ürününü sepete ekleme
     Given kullanıcı Hepsiburada sitesine gider

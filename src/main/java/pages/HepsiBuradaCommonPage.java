@@ -14,13 +14,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HomePage {
+public class HepsiBuradaCommonPage {
 
     WebDriver driver = DriverManager.getWebDriver();
     Actions actions = new Actions(driver);
     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-    public HomePage() {
+    public HepsiBuradaCommonPage() {
         PageFactory.initElements(driver, this);
     }
 

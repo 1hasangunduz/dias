@@ -1,61 +1,101 @@
-/* Driver Yönetimi (Web ve Mobil) */
-
 package utils;
 
 import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.MobileElement;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.options.UiAutomator2Options;
+import io.appium.java_client.ios.IOSDriver;
+import io.appium.java_client.ios.options.XCUITestOptions;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 
 public class DriverManager {
     private static WebDriver webDriver;
-    private static AppiumDriver<MobileElement> appiumDriver;
+    private static AppiumDriver driver;
+    private static final String PLATFORM = System.getProperty("platform", "Android");
 
-    // WebDriver Başlatma (Selenium)
     public static WebDriver getWebDriver() {
         if (webDriver == null) {
-            System.setProperty("webdriver.chrome.driver", "drivers/chromedriver");
-            webDriver = new ChromeDriver();
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--remote-allow-origins=*");
+            options.addArguments("--disable-notifications");  // Bildirimleri kapatma
+            options.addArguments("--start-maximized");        // Tarayıcıyı büyütme
+
+            webDriver = new ChromeDriver(options);
+            webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10)); // Varsayılan bekleme
             webDriver.manage().window().maximize();
         }
         return webDriver;
     }
 
-    // AppiumDriver Başlatma (Mobil)
-    public static AppiumDriver<MobileElement> getAppiumDriver() {
-        if (appiumDriver == null) {
-            DesiredCapabilities caps = new DesiredCapabilities();
-            caps.setCapability("platformName", "Android");
-            caps.setCapability("deviceName", "emulator-5554");
-            caps.setCapability("appPackage", "com.akakce.android");
-            caps.setCapability("appActivity", "com.akakce.activities.MainActivity");
-            try {
-                appiumDriver = new AppiumDriver<>(new URL("http://127.0.0.1:4723/wd/hub"), caps);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-        }
-        return appiumDriver;
-    }
-
-    // Driverları Kapatma
     public static void closeWebDriver() {
         if (webDriver != null) {
-            webDriver.quit();
-            webDriver = null;
+            try {
+                webDriver.quit();
+                webDriver = null;
+            } catch (Exception e) {
+                System.out.println("WebDriver zaten kapalı ya da sonlandırılmış.");
+            }
         }
+    }
+
+    // AppiumDriver Başlatma (Android ve iOS)
+    public static AppiumDriver getAppiumDriver() {
+        if (driver == null) {
+            switch (PLATFORM) {
+                case "Android" -> driver = createAndroidDriver();
+                case "iOS" -> driver = createIOSDriver();
+                default -> throw new UnsupportedOperationException("Desteklenmeyen platform: " + PLATFORM);
+            }
+        }
+        return driver;
+    }
+
+    private static AppiumDriver createAndroidDriver() {
+        UiAutomator2Options options = new UiAutomator2Options()
+                .setDeviceName("emulator-5554")
+                .setPlatformVersion("12.0")
+                .setApp(getAppPath("android"))
+                .setAppPackage("com.akakce.android")
+                .setAppActivity("com.akakce.activities.MainActivity")
+                .setNoReset(true)
+                .autoGrantPermissions();
+        try {
+            return new AndroidDriver(new URL("http://127.0.0.1:4723/wd/hub"), options);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static AppiumDriver createIOSDriver() {
+        XCUITestOptions options = new XCUITestOptions()
+                .setDeviceName("iPhone 12")
+                .setPlatformVersion("15.0")
+                .setApp(getAppPath("ios"))
+                .setNoReset(true)
+                .autoAcceptAlerts();
+        try {
+            return new IOSDriver(new URL("http://127.0.0.1:4723/wd/hub"), options);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String getAppPath(String platform) {
+        String basePath = "src/test/resources/apps/";
+        return new File(basePath + (platform.equals("android") ? "app-debug.apk" : "app-debug.ipa")).getAbsolutePath();
     }
 
     public static void closeAppiumDriver() {
-        if (appiumDriver != null) {
-            appiumDriver.quit();
-            appiumDriver = null;
+        if (driver != null) {
+            driver.quit();
+            driver = null;
         }
     }
 }
-
-/* Web Driver ve Appium Driver yönetimi tamamlandı. Sırada Page Object Model sınıflarını oluşturacağız. */
